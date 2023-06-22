@@ -7,5 +7,6 @@ data = rs.json()
 
 available_time = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
 for i in data:
-    available_time.add(f"{i['month']} {i['day']} {i['time']}")
+    if i['user_id'] is None:
+        available_time.add(f"{i['month']} {i['day']} {i['time']}")
 available_time.add('Bekor qilish')

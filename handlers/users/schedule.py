@@ -9,6 +9,10 @@ from keyboards.default.main_button import main_button
 import datetime
 import requests
 
+rs = requests.get(url=f"{BASE_URL}main/schedule/create/")
+data = rs.json()
+available_times = [f"{i['month']} {i['day']} {i['time']}" for i in data]
+
 
 @dp.message_handler(text="Vaqt belgilash")
 async def schedule(message: types.Message):
@@ -69,7 +73,21 @@ async def set_time(message: types.Message):
 print(available_time.keyboard)
 
 
-@dp.message_handler(lambda message: message.text in available_time.keyboard)
-async def handle_dynamic_message(message: types.Message):
-    selected_time = message
-    await message.answer(f"Siz shu vaqtni tanladiz - {selected_time}", reply_markup=types.ReplyKeyboardRemove())
+@dp.message_handler()
+async def handle_selected_time(message: types.Message):
+    selected_time = message.text
+    parts = selected_time.split()
+    month = parts[0]
+    day = int(parts[1])
+    time = parts[2]
+    user_id = message.from_user.id
+    if selected_time in available_times:
+        response = requests.put(url=f"{BASE_URL}main/schedule/update/", data={
+            'month': month,
+            'day': day,
+            'time': time,
+            'user_id': user_id
+        })
+        await message.reply(f"You have selected: {selected_time}")
+    else:
+        await message.reply("Invalid selection. Please choose an available time.")
