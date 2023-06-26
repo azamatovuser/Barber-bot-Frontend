@@ -4,7 +4,8 @@ from data.config import BASE_URL, ADMINS
 from states.ScheduleSetInfo import ScheduleSetInfo
 from aiogram.dispatcher import FSMContext
 from keyboards.default.schedule_button import schedule_button
-from keyboards.default.available_time import available_time
+# from keyboards.default.available_time import available_time
+from aiogram.types import ReplyKeyboardMarkup
 from keyboards.default.main_button import main_button
 import datetime
 import requests
@@ -62,6 +63,16 @@ async def time_set(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="Yozdirib qo'yish")
 async def set_time(message: types.Message):
+
+    rs = requests.get(url=f"{BASE_URL}main/schedule/create/")
+    data = rs.json()
+
+    available_time = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
+    for i in data:
+        if i['user_id'] is None:
+            available_time.add(f"{i['month']} {i['day']} {i['time']}")
+    available_time.add('Bekor qilish')
+
     await message.answer("Sizga qaysi vaqt qulay?", reply_markup=available_time)
 
 
@@ -70,7 +81,6 @@ async def set_time(message: types.Message):
     await message.answer(f"{message.from_user.first_name}", reply_markup=main_button)
 
 
-print(available_time.keyboard)
 
 
 @dp.message_handler()
@@ -81,6 +91,9 @@ async def handle_selected_time(message: types.Message):
     day = int(parts[1])
     time = parts[2]
     user_id = message.from_user.id
+    rs = requests.get(url=f"{BASE_URL}main/schedule/create/")
+    data = rs.json()
+    available_times = [f"{i['month']} {i['day']} {i['time']}" for i in data]
     if selected_time in available_times:
         response = requests.put(url=f"{BASE_URL}main/schedule/update/", data={
             'month': month,
@@ -88,6 +101,6 @@ async def handle_selected_time(message: types.Message):
             'time': time,
             'user_id': user_id
         })
-        await message.reply(f"You have selected: {selected_time}")
+        await message.reply(f"You have selected: {selected_time}", reply_markup=main_button)
     else:
         await message.reply("Invalid selection. Please choose an available time.")

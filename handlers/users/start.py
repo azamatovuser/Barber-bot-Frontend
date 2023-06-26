@@ -10,12 +10,10 @@ from keyboards.default.main_button import main_button
 from keyboards.default.schedule_button import schedule_button
 
 
-rs = requests.get(url=f"{BASE_URL}main/list/")
-data = rs.json()
-
-
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message):
+    rs = requests.get(url=f"{BASE_URL}main/list/")
+    data = rs.json()
     client = message.from_user.id
     admin = ADMINS[0]
     if int(client) == int(admin):
